@@ -342,7 +342,7 @@ async def get_courses_data_id(data_ids, store):
 	param.data_ids = data_ids
 	param.option = datastore.CourseOption.ALL
 
-	courses_info_json = await get_course_info_json(CourseRequestType.data_ids, param, store)
+	courses_info_json = await get_course_info_json(CourseRequestType.data_ids_no_stop, param, store)
 
 	return courses_info_json
 
@@ -512,20 +512,9 @@ async def add_comment_info_json(store, course_id, course_info, noCaching = False
 		if len(user_pids) != 0:
 			i = 0
 			for users_partial in [user_pids[j:j+500] for j in range(len(user_pids))[::500]]:
-				if not debug_enabled:
-					param = datastore.GetUsersParam()
-					param.pids = users_partial
-					param.option = datastore.UserOption.ALL
-					response = await store.get_users(param)
-					for user in response.users:
-						if user_pids[i] != 0:
-							comments_arr[i]["poster"] = {}
-							add_user_info_json(user, comments_arr[i]["poster"])
-						i += 1
-				else:
-					for user_pid in users_partial:
-						comments_arr[i]["commenter_pid"] = user_pid
-						i += 1
+				for user_pid in users_partial:
+					comments_arr[i]["commenter_pid"] = user_pid
+					i += 1
 
 		comments = {}
 		comments["comments"] = comments_arr
@@ -1056,6 +1045,45 @@ async def read_level_infos(data_ids: str):
 					return ORJSONResponse(status_code=400, content=course_info_json)
 
 				return ORJSONResponse(content=course_info_json)
+
+@app.get("/user_info_multiple/{pids}")
+async def user_info_multiple(pids: str):
+	corrected_pids = []
+	for id in pids.split(","):
+		corrected_pids.append(int(id))
+
+	if len(corrected_pids) > 500:
+		return ORJSONResponse(status_code=400, content={"error": "Number of pids requested must be between 1 and 500"})
+
+	await check_tokens()
+	async with lock:
+		async with backend.connect(s, HOST, PORT) as be:
+			async with be.login(str(user_id), auth_info=auth_info) as client:
+				store = datastore.DataStoreClientSMM2(client)
+				print("Want user infos for " + pids)
+
+				# Get user info for all pids				
+				param = datastore.GetUsersParam()
+				param.pids = corrected_pids
+				param.option = datastore.UserOption.ALL
+				response = await store.get_users(param)
+
+				# Filter out invalid users
+				# Can be determined by checking for a pid of 0
+				valid_users = []
+				for user in response.users:
+					if user.pid != 0:
+						valid_users.append(user)
+
+				# Put user info into a JSON object
+				user_info_json = {"users": []}
+				i = 0
+				for user in valid_users:
+					user_info_json["users"].append({})
+					add_user_info_json(user, user_info_json["users"][i])
+					i += 1
+
+				return ORJSONResponse(content=user_info_json)
 
 @app.get("/level_comments/{course_id}")
 async def read_level_comments(course_id: str, noCaching: bool = False):
