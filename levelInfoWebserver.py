@@ -78,7 +78,7 @@ else:
 		ticket = f.read()
 
 # Used for scraping
-debug_enabled = True
+debug_enabled = False
 if os.environ.get("SERVER_DEBUG_ENABLED") != None:
 	print("Server debug enabled")
 	debug_enabled = True
@@ -745,16 +745,10 @@ async def get_course_info_json(request_type, request_param, store, noCaching = F
 			if len(course.play_stats) == 5:
 				course_info["clears"] = course.play_stats[3]
 				course_info["attempts"] = course.play_stats[1]
-				if not debug_enabled:
-					if course.play_stats[1] == 0:
-						course_info["clear_rate"] = "0%"
-					else:
-						course_info["clear_rate"] = "%.2f%%" % ((course.play_stats[3] / course.play_stats[1]) * 100)
+				if course.play_stats[1] == 0:
+					course_info["clear_rate"] = 0
 				else:
-					if course.play_stats[1] == 0:
-						course_info["clear_rate"] = 0
-					else:
-						course_info["clear_rate"] = (course.play_stats[3] / course.play_stats[1]) * 100
+					course_info["clear_rate"] = (course.play_stats[3] / course.play_stats[1]) * 100
 				course_info["plays"] = course.play_stats[0]
 				course_info["versus_matches"] = course.play_stats[4]
 				course_info["coop_matches"] = course.play_stats[2]
@@ -812,55 +806,25 @@ async def get_course_info_json(request_type, request_param, store, noCaching = F
 
 				all_pids_result += (await store.get_users(param)).users
 		if len(uploader_pids) != 0:
-			if not debug_enabled:
-				i = 0
-				for user in all_pids_result[:len(uploader_pids)]:
-					if uploader_pids[i] != 0:
-						course_info = course_info_json["courses"][i]
-						course_info["uploader"] = {}
-						add_user_info_json(user, course_info["uploader"])
-
-					i += 1
-			else:
-				i = 0
-				for user_pid in uploader_pids:
-					if user_pid != 0:
-						course_info_json["courses"][i]["uploader_pid"] = user_pid
-					i += 1
+			i = 0
+			for user_pid in uploader_pids:
+				if user_pid != 0:
+					course_info_json["courses"][i]["uploader_pid"] = user_pid
+				i += 1
 
 		if len(first_clear_pids) != 0:
-			if not debug_enabled:
-				i = 0
-				for user in all_pids_result[len(uploader_pids):len(uploader_pids)+len(first_clear_pids)]:
-					if first_clear_pids[i] != 0:
-						course_info = course_info_json["courses"][i]
-						course_info["first_completer"] = {}
-						add_user_info_json(user, course_info["first_completer"])
-
-					i += 1
-			else:
-				i = 0
-				for user_pid in first_clear_pids:
-					if user_pid != 0:
-						course_info_json["courses"][i]["first_completer_pid"] = user_pid
-					i += 1
+			i = 0
+			for user_pid in first_clear_pids:
+				if user_pid != 0:
+					course_info_json["courses"][i]["first_completer_pid"] = user_pid
+				i += 1
 
 		if len(record_holder_pids) != 0:
-			if not debug_enabled:
-				i = 0
-				for user in all_pids_result[len(uploader_pids)+len(first_clear_pids):]:
-					if record_holder_pids[i] != 0:
-						course_info = course_info_json["courses"][i]
-						course_info["record_holder"] = {}
-						add_user_info_json(user, course_info["record_holder"])
-
-					i += 1
-			else:
-				i = 0
-				for user_pid in record_holder_pids:
-					if user_pid != 0:
-						course_info_json["courses"][i]["record_holder_pid"] = user_pid
-					i += 1
+			i = 0
+			for user_pid in record_holder_pids:
+				if user_pid != 0:
+					course_info_json["courses"][i]["record_holder_pid"] = user_pid
+				i += 1
 
 		if save:
 			i = 0
@@ -1258,10 +1222,9 @@ async def get_world_maps(map_id: str, noCaching: bool = False):
 
 					return ORJSONResponse(content=world_map)
 
-@app.get("/search_new")
-async def search_new(count: int = 10):
-	if count < 1 or count > 20:
-		return ORJSONResponse(status_code=400, content={"error": "Count %d is an invalid count, must be between 1 and 20" % count})
+@app.get("/newest_data_id")
+async def newest_data_id():
+	count = 100
 	await check_tokens()
 	async with lock:
 		async with backend.connect(s, HOST, PORT) as be:
@@ -1273,7 +1236,14 @@ async def search_new(count: int = 10):
 				if invalid_level(courses_info_json):
 					return ORJSONResponse(status_code=400, content=courses_info_json)
 
-				return ORJSONResponse(content=courses_info_json)
+				# Calculate max data_id from the JSON array
+				max_data_id = 0
+				for course_info in courses_info_json["courses"]:
+					if course_info["data_id"] > max_data_id:
+						max_data_id = course_info["data_id"]
+
+				# Put the max data_id into a new JSON object
+				return ORJSONResponse(content={"data_id": max_data_id})
 
 loop_handler = AsyncLoopThread()
 loop_handler.start()
