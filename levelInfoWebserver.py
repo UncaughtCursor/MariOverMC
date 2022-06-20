@@ -1850,8 +1850,6 @@ async def add_process_time_header(request, call_next):
 
 print("Start FastAPI")
 
-app.mount("/docs", StaticFiles(directory="docs", html=True), name="docs")
-
 @app.get("/level_info/{course_id}")
 async def read_level_info(course_id: str, noCaching: bool = False):
 	course_id = correct_course_id(course_id)
