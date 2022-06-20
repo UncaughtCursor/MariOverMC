@@ -1,5 +1,6 @@
 # MariOver
-The backend of [the Mario Maker 2 API](https://tgrcode.com/mm2/docs/). Hey Nintendo, it's MariOver.
+A modified fork of [TGR's Mario Maker 2 API](https://tgrcode.com/mm2/docs/). This is used
+internally in MakerCentral to download data from SMM2's servers.
 
 # Setting up
 0. Run `pip install -r requirements.txt`
