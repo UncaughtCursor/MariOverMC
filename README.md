@@ -21,5 +21,7 @@ internally in MakerCentral to download data from SMM2's servers.
 # Running
 `uvicorn levelInfoWebserver:app --port 1234` with any port can be used to start the server.
 
+To deploy over HTTP: `uvicorn levelInfoWebserver:app --host <Public IPv4 Address> --port 80`
+
 # Documentation
 Documentation can be found in the file `docs/index.html`.

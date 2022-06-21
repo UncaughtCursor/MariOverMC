@@ -142,7 +142,7 @@
 								createLink([course_id], [val => val.length == 9 &&
 										/^[0123456789BCDFGHJKLMNPQRSTVWXYbcdfghjklmnpqrstvwxy]+$/.test(val)
 									], document.getElementById("level_info_link"), vals =>
-									"https://magic.makercentral.io/level_info/" +
+									"http://magic.makercentral.io/level_info/" +
 									vals[0].toUpperCase());
 							});
 						})();
@@ -172,7 +172,7 @@
 								createLink([maker_id], [val => val.length == 9 &&
 										/^[0123456789BCDFGHJKLMNPQRSTVWXYbcdfghjklmnpqrstvwxy]+$/.test(val)
 									], document.getElementById("user_info_link"), vals =>
-									"https://magic.makercentral.io/user_info/" +
+									"http://magic.makercentral.io/user_info/" +
 									vals[0].toUpperCase());
 							});
 						})();
@@ -204,7 +204,7 @@
 										"18446744073709551616"))],
 									document
 									.getElementById("level_info_multiple_link"), vals =>
-									"https://magic.makercentral.io/level_info_multiple/" +
+									"http://magic.makercentral.io/level_info_multiple/" +
 									vals[0].toUpperCase());
 							});
 						})();
@@ -234,7 +234,7 @@
 								createLink([maker_id], [val => val.split(",").every(x =>
 										/^[0-9]+$/.test(x) && BigInt(x) > 0 && BigInt(x) < BigInt(
 										"18446744073709551616"))], document.getElementById("user_info_multiple_link"), vals =>
-									"https://magic.makercentral.io/user_info_multiple/" +
+									"http://magic.makercentral.io/user_info_multiple/" +
 									vals[0].toUpperCase());
 							});
 						})();
@@ -263,7 +263,7 @@
 								createLink([course_id], [val => val.length == 9 &&
 										/^[0123456789BCDFGHJKLMNPQRSTVWXYbcdfghjklmnpqrstvwxy]+$/.test(val)
 									], document.getElementById("comments_link"), vals =>
-									"https://magic.makercentral.io/level_comments/" +
+									"http://magic.makercentral.io/level_comments/" +
 									vals[0].toUpperCase());
 							});
 						})();
@@ -292,7 +292,7 @@
 								createLink([course_id], [val => val.length == 9 &&
 										/^[0123456789BCDFGHJKLMNPQRSTVWXYbcdfghjklmnpqrstvwxy]+$/.test(val)
 									], document.getElementById("thumbnail_link"), vals =>
-									"https://magic.makercentral.io/level_thumbnail/" +
+									"http://magic.makercentral.io/level_thumbnail/" +
 									vals[0].toUpperCase());
 							});
 						})();
@@ -322,7 +322,7 @@
 										/^[0-9]+$/.test(val) && BigInt(val) > 0 && BigInt(val) < BigInt(
 											"18446744073709551616")
 									], document.getElementById("level_data_link_data_id"), vals =>
-									"https://magic.makercentral.io/level_data_dataid/" +
+									"http://magic.makercentral.io/level_data_dataid/" +
 									vals[0]);
 							});
 						})();
@@ -352,7 +352,7 @@
 								createLink([maker_id], [val => val.length == 9 &&
 										/^[0123456789BCDFGHJKLMNPQRSTVWXYbcdfghjklmnpqrstvwxy]+$/.test(val)
 									], document.getElementById("get_posted_link"), vals =>
-									"https://magic.makercentral.io/get_posted/" +
+									"http://magic.makercentral.io/get_posted/" +
 									vals[0].toUpperCase());
 							});
 						})();
@@ -382,7 +382,7 @@
 								createLink([super_world_id], [val => val.length == 37 &&
 								val.charAt(16) == "_" && /^[a-z0-9_]+$/.test(val)
 								], document.getElementById("super_world_link"), vals =>
-									"https://magic.makercentral.io/super_world/" +
+									"http://magic.makercentral.io/super_world/" +
 									vals[0]);
 							});
 						})();
@@ -396,8 +396,8 @@
 				</div>
 				<div class="collapsible-body">
 					<p>Returns an approximation for the latest level data ID allocated.</p>
-					<p><a href="https://magic.makercentral.io/newest_data_id" class="generatedLink">
-						https://magic.makercentral.io/newest_data_id
+					<p><a href="http://magic.makercentral.io/newest_data_id" class="generatedLink">
+						http://magic.makercentral.io/newest_data_id
 					</a></p>
 				</div>
 			</li>
