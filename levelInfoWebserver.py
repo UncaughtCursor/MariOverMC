@@ -451,75 +451,69 @@ async def add_comment_info_json(store, course_id, course_info, noCaching = False
 		with open(loc, mode="rb") as f:
 			return orjson.loads(zlib.decompress(f.read()))
 
-	if debug_enabled or course_info["uploader"]["comments_enabled"]:
-		user_pids = []
-		data_id = course_id_to_dataid(course_id)
-		if course_info["num_comments"] < 100:
-			comments = await store.search_comments(data_id)
-		else:
-			# Only 1000 comments are ever available, Nintendo appears to delete them automatically
-			param = datastore.SearchCommentsInOrderParam()
-			param.range.offset = 0
-			param.range.size = 1000
-			param.data_id = data_id
-			comments = (await store.search_comments_in_order(param)).comments
-
-		for comment in comments:
-			if comment.unk5 != 0:
-				comment_json = {}
-				# Corresponds to course data id, redundant
-				#comment_json["unk1"] = comment.unk1
-				comment_json["comment_id"] = comment.unk2
-				if comment.unk4 == 1:
-					comment_json["text"] = comment.unk15
-				comment_json["posted_pretty"] = str(comment.unk13)
-				comment_json["posted"] = comment.unk13.timestamp()
-				comment_json["clear_required"] = comment.unk11
-				if comment.unk4 == 2:
-					comment_json["reaction_image_id"] = comment.unk16
-					comment_json["reaction_image_id_name"] = CommentReactionImage[comment.unk16]
-				comment_json["type_name"] = CommentType[comment.unk4]
-				comment_json["type"] = comment.unk4
-				comment_json["has_beaten"] = bool(comment.unk3)
-				comment_json["x"] = comment.unk6
-				comment_json["y"] = comment.unk7
-				comment_json["reaction_face"] = comment.unk9
-				comment_json["reaction_face_name"] = CommentReactionFace[comment.unk9]
-				comment_json["unk8"] = comment.unk8 # Usually 0
-				comment_json["unk10"] = comment.unk10 # Usually 0
-				comment_json["unk12"] = comment.unk12 # Usually false
-				if not debug_enabled:
-					comment_json["unk14"] = base64.b64encode(comment.unk14).decode("ascii") # Usually nothing
-				else:
-					comment_json["unk14"] = comment.unk14
-				comment_json["unk17"] = comment.unk17 # Usually 0
-
-				if comment.unk4 == 0:
-					comment_image = {}
-					comment_image["url"] = comment.picture.url
-					comment_image["size"] = comment.picture.unk1
-					comment_image["filename"] = comment.picture.filename
-					comment_json["custom_comment_image"] = comment_image
-
-					# How to extract image
-					# response = await http.get(comment.picture.url, headers=custom_comment_image_headers)
-					# img = Image.frombuffer("RGBA", (320, 180), zlib.decompress(response.body), "raw", "RGBA", 0, 1)
-					# img.save(comment.picture.filename + ".png")
-
-				comments_arr.append(comment_json)
-				user_pids.append(comment.unk5)
-
-		if len(user_pids) != 0:
-			i = 0
-			for users_partial in [user_pids[j:j+500] for j in range(len(user_pids))[::500]]:
-				for user_pid in users_partial:
-					comments_arr[i]["commenter_pid"] = user_pid
-					i += 1
-
-		comments = {}
-		comments["comments"] = comments_arr
+	user_pids = []
+	data_id = course_id_to_dataid(course_id)
+	if course_info["num_comments"] < 100:
+		comments = await store.search_comments(data_id)
 	else:
-		comments = {"error": "Uploader has disabled comments on their levels", "course_id": course_id}
+		# Only 1000 comments are ever available, Nintendo appears to delete them automatically
+		param = datastore.SearchCommentsInOrderParam()
+		param.range.offset = 0
+		param.range.size = 1000
+		param.data_id = data_id
+		comments = (await store.search_comments_in_order(param)).comments
+
+	for comment in comments:
+		if comment.unk5 != 0:
+			comment_json = {}
+			# Corresponds to course data id, redundant
+			#comment_json["unk1"] = comment.unk1
+			comment_json["comment_id"] = comment.unk2
+			if comment.unk4 == 1:
+				comment_json["text"] = comment.unk15
+			comment_json["posted_pretty"] = str(comment.unk13)
+			comment_json["posted"] = comment.unk13.timestamp()
+			comment_json["clear_required"] = comment.unk11
+			if comment.unk4 == 2:
+				comment_json["reaction_image_id"] = comment.unk16
+			comment_json["type"] = comment.unk4
+			comment_json["has_beaten"] = bool(comment.unk3)
+			comment_json["x"] = comment.unk6
+			comment_json["y"] = comment.unk7
+			comment_json["reaction_face"] = comment.unk9
+			comment_json["unk8"] = comment.unk8 # Usually 0
+			comment_json["unk10"] = comment.unk10 # Usually 0
+			comment_json["unk12"] = comment.unk12 # Usually false
+			if not debug_enabled:
+				comment_json["unk14"] = base64.b64encode(comment.unk14).decode("ascii") # Usually nothing
+			else:
+				comment_json["unk14"] = comment.unk14
+			comment_json["unk17"] = comment.unk17 # Usually 0
+
+			if comment.unk4 == 0:
+				comment_image = {}
+				comment_image["url"] = comment.picture.url
+				comment_image["size"] = comment.picture.unk1
+				comment_image["filename"] = comment.picture.filename
+				comment_json["custom_comment_image"] = comment_image
+
+				# How to extract image
+				# response = await http.get(comment.picture.url, headers=custom_comment_image_headers)
+				# img = Image.frombuffer("RGBA", (320, 180), zlib.decompress(response.body), "raw", "RGBA", 0, 1)
+				# img.save(comment.picture.filename + ".png")
+
+			comments_arr.append(comment_json)
+			user_pids.append(comment.unk5)
+
+	if len(user_pids) != 0:
+		i = 0
+		for users_partial in [user_pids[j:j+500] for j in range(len(user_pids))[::500]]:
+			for user_pid in users_partial:
+				comments_arr[i]["commenter_pid"] = user_pid
+				i += 1
+
+	comments = {}
+	comments["comments"] = comments_arr
 
 	if save:
 		os.makedirs("cache/level_comments", exist_ok=True)
@@ -569,12 +563,7 @@ async def search_world_map(store, ids, noCaching = False, save = True):
 		thumbnail["size"] = map.thumbnail.size
 		thumbnail["filename"] = map.thumbnail.filename
 		map_json["thumbnail"] = thumbnail
-
-		if not debug_enabled:
-			map_json["courses"] = (await get_courses_data_id(map.data_ids, store))["courses"]
-			map_json["uploader"] = map_json["courses"][0]["uploader"]
-		else:
-			map_json["courses"] = map.data_ids
+		map_json["courses"] = map.data_ids
 
 		world_map_arr.append(map_json)
 		i += 1
