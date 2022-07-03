@@ -509,7 +509,7 @@ async def add_comment_info_json(store, course_id, course_info, noCaching = False
 		i = 0
 		for users_partial in [user_pids[j:j+500] for j in range(len(user_pids))[::500]]:
 			for user_pid in users_partial:
-				comments_arr[i]["commenter_pid"] = user_pid
+				comments_arr[i]["commenter_pid"] = str(user_pid)
 				i += 1
 
 	comments = {}
@@ -787,21 +787,21 @@ async def get_course_info_json(request_type, request_param, store, noCaching = F
 			i = 0
 			for user_pid in uploader_pids:
 				if user_pid != 0:
-					course_info_json["courses"][i]["uploader_pid"] = user_pid
+					course_info_json["courses"][i]["uploader_pid"] = str(user_pid)
 				i += 1
 
 		if len(first_clear_pids) != 0:
 			i = 0
 			for user_pid in first_clear_pids:
 				if user_pid != 0:
-					course_info_json["courses"][i]["first_completer_pid"] = user_pid
+					course_info_json["courses"][i]["first_completer_pid"] = str(user_pid)
 				i += 1
 
 		if len(record_holder_pids) != 0:
 			i = 0
 			for user_pid in record_holder_pids:
 				if user_pid != 0:
-					course_info_json["courses"][i]["record_holder_pid"] = user_pid
+					course_info_json["courses"][i]["record_holder_pid"] = str(user_pid)
 				i += 1
 
 		if save:
