@@ -360,7 +360,7 @@ async def get_courses_posted(size, pid, store):
 def add_user_info_json(user, json_dict):
 	json_dict["region"] = user.region
 	json_dict["code"] = user.code
-	json_dict["pid"] = user.pid
+	json_dict["pid"] = str(user.pid)
 	json_dict["name"] = user.name
 	json_dict["country"] = user.country
 	json_dict["last_active"] = user.last_active.timestamp()
