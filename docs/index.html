@@ -44,7 +44,7 @@
 			border-color: #191d25;
 		}
 
-		#user_info_multiple, #level_info_multiple {
+		#user_info_multiple, #level_info_multiple, #super_world_id_super_world {
 			width: 350px;
 		}
 
@@ -362,15 +362,15 @@
 			<li>
 				<div class="collapsible-header">
 					<i class="material-icons">article</i>
-					<span class="endpointName">/super_world/<span class="endpointItem">{super_world_id}</span>
+					<span class="endpointName">/super_worlds/<span class="endpointItem">{super_world_ids}</span>
 					</span>
 				</div>
 				<div class="collapsible-body">
-					<p>Returns info on the specified super world</p>
-					<i class="material-icons importantParam">priority_high</i>&nbsp;<span class="endpointItem">{super_world_id}</span>: The code used to identify a super world
+					<p>Returns info on the specified super worlds</p>
+					<i class="material-icons importantParam">priority_high</i>&nbsp;<span class="endpointItem">{super_world_id}</span>: The codes used to identify the super worlds, separated by commas
 					<div class="input-field inline">
 						<input id="super_world_id_super_world" type="text">
-						<label for="super_world_id_super_world">Super World ID</label>
+						<label for="super_world_id_super_world">Super World IDs</label>
 					</div>
 					<p><a id="super_world_link" class="generatedLink"></a></p>
 
@@ -379,10 +379,10 @@
 							var super_world_id = document.getElementById("super_world_id_super_world");
 
 							document.addEventListener("DOMContentLoaded", function() {
-								createLink([super_world_id], [val => val.length == 37 &&
-								val.charAt(16) == "_" && /^[a-z0-9_]+$/.test(val)
+								createLink([super_world_id], [val => val.length >= 37 &&
+								val.charAt(16) == "_" && /^[a-z0-9_,]+$/.test(val)
 								], document.getElementById("super_world_link"), vals =>
-									"http://magic.makercentral.io/super_world/" +
+									"http://magic.makercentral.io/super_worlds/" +
 									vals[0]);
 							});
 						})();

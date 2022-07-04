@@ -280,7 +280,7 @@ def get_mii_data(data):
 	url = "https://studio.mii.nintendo.com/miis/image.png?data=" + mii_data.decode("utf-8")
 	return [url + "&type=face&width=512&instanceCount=1", mii_bytes]
 
-async def obtain_course_info(course_id, store, noCaching = False):
+async def obtain_course_info(course_id, store, noCaching = True):
 	param = datastore.GetUserOrCourseParam()
 	param.code = course_id
 	param.course_option = datastore.CourseOption.ALL
@@ -290,7 +290,7 @@ async def obtain_course_info(course_id, store, noCaching = False):
 
 	return course_info_json
 
-async def obtain_user_info(maker_id, store, noCaching = False, save = True):
+async def obtain_user_info(maker_id, store, noCaching = True, save = True):
 	param = datastore.GetUserOrCourseParam()
 	param.code = maker_id
 	param.user_option = datastore.UserOption.ALL
@@ -443,7 +443,7 @@ def add_user_info_json(user, json_dict):
 	json_dict["unk12"] = user.unk12
 	json_dict["unk16"] = user.unk16
 
-async def add_comment_info_json(store, course_id, course_info, noCaching = False, save = True):
+async def add_comment_info_json(store, course_id, course_info, noCaching = True, save = True):
 	loc = "cache/level_comments/%s" % course_id
 	comments_arr = []
 
@@ -521,7 +521,7 @@ async def add_comment_info_json(store, course_id, course_info, noCaching = False
 			f.write(zlib.compress(orjson.dumps(comments)))
 	return comments
 
-async def search_world_map(store, ids, noCaching = False, save = True):
+async def search_world_map(store, ids, noCaching = True, save = True):
 	world_map_arr = []
 
 	if len(ids) == 1 and pathlib.Path("cache/super_worlds/%s" % ids[0]).exists() and not noCaching:
@@ -574,14 +574,11 @@ async def search_world_map(store, ids, noCaching = False, save = True):
 			with open("cache/super_worlds/%s" % map["id"], mode="wb+") as f:
 				f.write(zlib.compress(orjson.dumps(map)))
 
-	if len(world_map_arr) == 1 and not debug_enabled:
-		return world_map_arr[0]
-	else:
-		world_map_json = {}
-		world_map_json["super_worlds"] = world_map_arr
-		return world_map_json
+	world_map_json = {}
+	world_map_json["super_worlds"] = world_map_arr
+	return world_map_json
 
-async def get_course_info_json(request_type, request_param, store, noCaching = False, save = True):
+async def get_course_info_json(request_type, request_param, store, noCaching = True, save = True):
 	courses = []
 	from_cache = []
 	stop_on_bad = True
@@ -966,7 +963,7 @@ async def add_process_time_header(request, call_next):
 print("Start FastAPI")
 
 @app.get("/level_info/{course_id}")
-async def read_level_info(course_id: str, noCaching: bool = False):
+async def read_level_info(course_id: str, nocaching: bool = True):
 	course_id = correct_course_id(course_id)
 	if (in_cache(course_id) or invalid_course_id_length(course_id) or is_maker_id(course_id)) and not noCaching:
 		course_info_json = await obtain_course_info(course_id, None)
@@ -990,7 +987,7 @@ async def read_level_info(course_id: str, noCaching: bool = False):
 					return ORJSONResponse(content=course_info_json)
 
 @app.get("/user_info/{maker_id}")
-async def read_user_info(maker_id: str, noCaching: bool = False):
+async def read_user_info(maker_id: str, nocaching: bool = True):
 	maker_id = correct_course_id(maker_id)
 	if (in_user_cache(maker_id) or invalid_course_id_length(maker_id) or not is_maker_id(maker_id)) and not noCaching:
 		user_info_json = await obtain_user_info(maker_id, None)
@@ -1075,7 +1072,7 @@ async def user_info_multiple(pids: str):
 				return ORJSONResponse(content=user_info_json)
 
 @app.get("/level_comments/{course_id}")
-async def read_level_comments(course_id: str, noCaching: bool = False):
+async def read_level_comments(course_id: str, nocaching: bool = True):
 	course_id = correct_course_id(course_id)
 	print("Want comments for " + course_id)
 	path = "cache/level_comments/%s" % course_id
@@ -1211,33 +1208,26 @@ async def search_posted(maker_id: str):
 
 				return ORJSONResponse(content=courses_info_json)
 
-@app.get("/super_world/{map_id}")
-async def get_world_maps(map_id: str, noCaching: bool = False):
-	if len(map_id) < 34:
-		return ORJSONResponse(status_code=400, content={"error": "Super world ID is invalid", "id": map_id})
+@app.get("/super_worlds/{map_ids}")
+async def get_world_maps(map_ids: str, nocaching: bool = True):
+	corrected_map_ids = []
+	for id in map_ids.split(","):
+		corrected_map_ids.append(id)
 
-	path = "cache/super_worlds/%s" % map_id
+	# TODO: Make this work with multiple world IDs
+	
+	await check_tokens()
+	async with lock:
+		async with backend.connect(s, HOST, PORT) as be:
+			async with be.login(str(user_id), auth_info=auth_info) as client:
+				store = datastore.DataStoreClientSMM2(client)
+				print("Want world maps %s" % map_ids)
+				world_maps = await search_world_map(store, corrected_map_ids)
 
-	os.makedirs(os.path.dirname(path), exist_ok=True)
+				if invalid_level(world_maps):
+					return ORJSONResponse(status_code=400, content=world_maps)
 
-	if pathlib.Path(path).exists() and not noCaching:
-		world_map = await search_world_map(None, [map_id])
-		if invalid_level(world_map):
-			return ORJSONResponse(status_code=400, content=world_map)
-		return ORJSONResponse(content=world_map)
-	else:
-		await check_tokens()
-		async with lock:
-			async with backend.connect(s, HOST, PORT) as be:
-				async with be.login(str(user_id), auth_info=auth_info) as client:
-					store = datastore.DataStoreClientSMM2(client)
-					print("Want world map %s" % map_id)
-					world_map = await search_world_map(store, [map_id], noCaching)
-
-					if invalid_level(world_map):
-						return ORJSONResponse(status_code=400, content=world_map)
-
-					return ORJSONResponse(content=world_map)
+				return ORJSONResponse(content=world_maps)
 
 @app.get("/newest_data_id")
 async def newest_data_id():
