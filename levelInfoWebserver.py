@@ -536,10 +536,7 @@ async def search_world_map(store, ids, noCaching = True, save = True):
 	i = 0
 	for map in response.maps:
 		if map.owner_id == 0:
-			if not debug_enabled:
-				return {"error": "No super world with that id", "id": ids[i]}
-			else:
-				continue
+			continue
 
 		map_json = {}
 		map_json["id"] = map.id
