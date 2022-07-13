@@ -612,7 +612,8 @@ async def get_course_info_json(request_type, request_param, store, noCaching = T
 					with open(loc, mode="wb+") as f:
 						f.write(zlib.compress(('{"error": "No course with that ID", "course_id": "%s"}' % request_param.code).encode("UTF8")))
 						return {"error": "No course with that ID", "course_id": request_param.code}
-			except:
+			except Exception as e:
+				print(e)
 				# Save (the empty) level info to json
 				print("course_id " + request_param.code + " is invalid")
 				with open(loc, mode="wb+") as f:
@@ -960,7 +961,7 @@ async def add_process_time_header(request, call_next):
 print("Start FastAPI")
 
 @app.get("/level_info/{course_id}")
-async def read_level_info(course_id: str, nocaching: bool = True):
+async def read_level_info(course_id: str, noCaching: bool = True):
 	course_id = correct_course_id(course_id)
 	if (in_cache(course_id) or invalid_course_id_length(course_id) or is_maker_id(course_id)) and not noCaching:
 		course_info_json = await obtain_course_info(course_id, None)
@@ -984,7 +985,7 @@ async def read_level_info(course_id: str, nocaching: bool = True):
 					return ORJSONResponse(content=course_info_json)
 
 @app.get("/user_info/{maker_id}")
-async def read_user_info(maker_id: str, nocaching: bool = True):
+async def read_user_info(maker_id: str, noCaching: bool = True):
 	maker_id = correct_course_id(maker_id)
 	if (in_user_cache(maker_id) or invalid_course_id_length(maker_id) or not is_maker_id(maker_id)) and not noCaching:
 		user_info_json = await obtain_user_info(maker_id, None)
@@ -1069,7 +1070,7 @@ async def user_info_multiple(pids: str):
 				return ORJSONResponse(content=user_info_json)
 
 @app.get("/level_comments/{course_id}")
-async def read_level_comments(course_id: str, nocaching: bool = True):
+async def read_level_comments(course_id: str, noCaching: bool = True):
 	course_id = correct_course_id(course_id)
 	print("Want comments for " + course_id)
 	path = "cache/level_comments/%s" % course_id
@@ -1109,23 +1110,23 @@ async def read_level_comments(course_id: str, nocaching: bool = True):
 	},
 	response_class=Response
 )
-async def read_level_thumbnail(course_id: str):
+async def read_level_thumbnail(course_id: str, noCaching: bool = True):
 	course_id = correct_course_id(course_id)
 	# Download thumbnails
 	print("Want thumbnail for " + course_id)
 	path = "cache/level_thumbnail/%s.jpg" % course_id
 	os.makedirs(os.path.dirname(path), exist_ok=True)
 
-	if pathlib.Path(path).exists():
+	if pathlib.Path(path).exists() and not noCaching:
 		return FileResponse(path=path, media_type="image/jpg")
 
 	course_info_json = None
-	if in_cache(course_id) or invalid_course_id_length(course_id):
+	if (in_cache(course_id) or invalid_course_id_length(course_id)) and not noCaching:
 		course_info_json = await obtain_course_info(course_id, None)
 		if invalid_level(course_info_json):
 			return ORJSONResponse(status_code=400, content=course_info_json)
 
-	if in_cache(course_id) and await download_thumbnail(None, course_info_json["one_screen_thumbnail"]["url"], path, ServerDataTypes.level_thumbnail):
+	if in_cache(course_id) and await download_thumbnail(None, course_info_json["one_screen_thumbnail"]["url"], path, ServerDataTypes.level_thumbnail) and not noCaching:
 		return FileResponse(path=path, media_type="image/jpg")
 	else:
 		await check_tokens()
@@ -1206,12 +1207,10 @@ async def search_posted(maker_id: str):
 				return ORJSONResponse(content=courses_info_json)
 
 @app.get("/super_worlds/{map_ids}")
-async def get_world_maps(map_ids: str, nocaching: bool = True):
+async def get_world_maps(map_ids: str):
 	corrected_map_ids = []
 	for id in map_ids.split(","):
 		corrected_map_ids.append(id)
-
-	# TODO: Make this work with multiple world IDs
 	
 	await check_tokens()
 	async with lock:
