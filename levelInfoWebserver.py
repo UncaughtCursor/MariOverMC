@@ -1126,8 +1126,9 @@ async def read_level_thumbnail(course_id: str, noCaching: bool = True):
 		if invalid_level(course_info_json):
 			return ORJSONResponse(status_code=400, content=course_info_json)
 
-	if in_cache(course_id) and await download_thumbnail(None, course_info_json["one_screen_thumbnail"]["url"], path, ServerDataTypes.level_thumbnail) and not noCaching:
-		return FileResponse(path=path, media_type="image/jpg")
+	if not noCaching:
+		if in_cache(course_id) and await download_thumbnail(None, course_info_json["one_screen_thumbnail"]["url"], path, ServerDataTypes.level_thumbnail) and not noCaching:
+			return FileResponse(path=path, media_type="image/jpg")
 	else:
 		await check_tokens()
 		async with lock:
