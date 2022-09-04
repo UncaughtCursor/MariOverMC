@@ -136,7 +136,7 @@ class ServerHeaders:
 	ninji_ghost_replay = ServerDataTypeHeader(ServerDataTypes.ninji_ghost_replay)
 	world_map_thumbnails = ServerDataTypeHeader(ServerDataTypes.world_map_thumbnails)
 
-async def download_thumbnail(store, url, filename, data_type, save = True):
+async def download_thumbnail(store, url, filename, data_type, save = False):
 	if data_type == ServerDataTypes.level_thumbnail:
 		body = await ServerHeaders.level_thumbnail.request_url(url, store)
 		if body == False:
@@ -290,7 +290,7 @@ async def obtain_course_info(course_id, store, noCaching = True):
 
 	return course_info_json
 
-async def obtain_user_info(maker_id, store, noCaching = True, save = True):
+async def obtain_user_info(maker_id, store, noCaching = True, save = False):
 	param = datastore.GetUserOrCourseParam()
 	param.code = maker_id
 	param.user_option = datastore.UserOption.ALL
@@ -443,7 +443,7 @@ def add_user_info_json(user, json_dict):
 	json_dict["unk12"] = user.unk12
 	json_dict["unk16"] = user.unk16
 
-async def add_comment_info_json(store, course_id, course_info, noCaching = True, save = True):
+async def add_comment_info_json(store, course_id, course_info, noCaching = True, save = False):
 	loc = "cache/level_comments/%s" % course_id
 	comments_arr = []
 
@@ -521,7 +521,7 @@ async def add_comment_info_json(store, course_id, course_info, noCaching = True,
 			f.write(zlib.compress(orjson.dumps(comments)))
 	return comments
 
-async def search_world_map(store, ids, noCaching = True, save = True):
+async def search_world_map(store, ids, noCaching = True, save = False):
 	world_map_arr = []
 
 	if len(ids) == 1 and pathlib.Path("cache/super_worlds/%s" % ids[0]).exists() and not noCaching:
@@ -575,7 +575,7 @@ async def search_world_map(store, ids, noCaching = True, save = True):
 	world_map_json["super_worlds"] = world_map_arr
 	return world_map_json
 
-async def get_course_info_json(request_type, request_param, store, noCaching = True, save = True):
+async def get_course_info_json(request_type, request_param, store, noCaching = True, save = False):
 	courses = []
 	from_cache = []
 	stop_on_bad = True
