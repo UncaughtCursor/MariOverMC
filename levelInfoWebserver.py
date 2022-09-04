@@ -136,7 +136,7 @@ class ServerHeaders:
 	ninji_ghost_replay = ServerDataTypeHeader(ServerDataTypes.ninji_ghost_replay)
 	world_map_thumbnails = ServerDataTypeHeader(ServerDataTypes.world_map_thumbnails)
 
-async def download_thumbnail(store, url, filename, data_type, save = False):
+async def download_thumbnail(store, url, filename, data_type, save = True):
 	if data_type == ServerDataTypes.level_thumbnail:
 		body = await ServerHeaders.level_thumbnail.request_url(url, store)
 		if body == False:
