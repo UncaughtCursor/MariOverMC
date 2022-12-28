@@ -27,10 +27,10 @@ urllib3==1.25.9
 orjson==3.6.4
 fastapi==0.70.0
 uvicorn==0.15.0
-anynet==0.0.14
+anynet==0.0.18
 grequests==0.6.0
 kaitaistruct==0.9
 Pillow==8.4.0
 psutil==5.8.0
 matplotlib==3.5.1
-git+https://github.com/kinnay/NintendoClients@master#egg=nintendo
+git+https://github.com/kinnay/NintendoClients@master#egg=nintendoclients
