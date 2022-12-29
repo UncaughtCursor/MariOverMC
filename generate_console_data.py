@@ -15,10 +15,10 @@ username = None
 password = None
 with open("ConsoleData/8000000000000010", mode="rb") as file:
 	data = file.read()
-	username_bytes = bytearray(data[0x00064020:0x00064028])
+	username_bytes = bytearray(data[0x00084020:0x00084028])
 	username_bytes.reverse()
 	username = "0x" + username_bytes.hex().upper()
-	password = data[0x00064028:0x00064050].decode("ascii")
+	password = data[0x00084028:0x00084050].decode("ascii")
 
 async def create_args():
 	keys = switch.load_keys("./ConsoleData/prod.keys")
