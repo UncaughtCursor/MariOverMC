@@ -1,5 +1,5 @@
 # MariOverMC
-A modified fork of [TGR's Mario Maker 2 API](https://tgrcode.com/mm2/docs/). This is used
+A modified fork of [TGR's Mario Maker 2 API](https://github.com/TheGreatRambler/MariOver). This is used
 internally in MakerCentral to download data from SMM2's servers.
 
 # Setting up
